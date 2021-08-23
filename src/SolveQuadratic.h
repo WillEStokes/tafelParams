@@ -7,9 +7,10 @@
 
 int sign(double b);
 
-std::pair<std::complex<float>, std::complex<float>> SolveQuadratic(double a, double b, double c)
+std::pair<std::complex<double>, std::complex<double>> SolveQuadratic(double a, double b, double c, int& realSolutions)
 {
-  std::pair<std::complex<float>, std::complex<float>> result;
+  std::pair<std::complex<double>, std::complex<double>> result;
+  realSolutions = false;
 
   if(a < 0.000001) // ==0
   {
@@ -22,6 +23,7 @@ std::pair<std::complex<float>, std::complex<float>> SolveQuadratic(double a, dou
   {
     result.first = (-0.5 * (b + sign(b) * sqrt(delta))) / a;
     result.second = c / (-0.5 * (b + sign(b) * sqrt(delta)));
+    realSolutions = true;
   }
   else
   {

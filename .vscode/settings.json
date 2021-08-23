@@ -80,6 +80,7 @@
         "csetjmp": "cpp",
         "cuchar": "cpp",
         "scoped_allocator": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "*.tpp": "cpp"
     }
 }

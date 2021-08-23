@@ -12,6 +12,7 @@
 #include <unistd.h> // for sleep
 #include <ctime>
 #include "PolynomialRegression.h"
+#include "SolveQuadratic.h"
 #include "TafelParams.h"
 
 // Function declerations
@@ -22,6 +23,29 @@ std::vector<double> fastSmooth(std::vector<double>& yData, unsigned int smoothWi
 std::vector<double> forEachVector(const std::vector<double>& values, const std::vector<double>& modifier, double(*func)(double, double));
 std::vector<double> forEachScalar(const std::vector<double>& values, double modifier, double(*func)(double, double));
 std::vector<double> polynomial(std::vector<double>& xData, std::vector<double>& coeffs);
+std::vector<double> linspace(double startVal, double endVal, int elements);
+int inRange(double val, double lowerLim, double upperLim);
+int getTafelParams(std::vector<double>& xDataAll, 
+    std::vector<double>& yDataAll, 
+    const double potentialThreshold, 
+    const double cathodicRSquared, 
+    double& cathodicConstant, 
+    double& anodicConstant, 
+    double& iCorr, 
+    double& eCorr, 
+    std::array<std::array<double, 2>, 2>& cathodicFitCoords, 
+    std::array<std::array<double, 2>, 2>& anodicFitCoords );
+int getTafelParamsWrapper(double* xData, 
+    double* yData, 
+    int numRows,
+    const double potentialThreshold, 
+    const double cathodicRSquared, 
+    double cathodicConstant, 
+    double anodicConstant, 
+    double iCorr, 
+    double eCorr, 
+    double cathodicFitCoords[4], 
+    double anodicFitCoords[4] );
 
 int main()
 {
@@ -32,27 +56,73 @@ int main()
 
     const double potentialThreshold = 0.01;
     const double cathodicRSquared = 0.9;
-    double cathodicConstant;
-    double anodicConstant;
-    double iCorr;
-    double eCorr;
-    double cathodicFitCoords[4];
-    double anodicFitCoords[4];
+    double cathodicConstant = 0;
+    double anodicConstant = 0;
+    double iCorr = 0;
+    double eCorr = 0;
+    std::array<std::array<double, 2>, 2> cathodicFitCoords = {0, 0, 0, 0};
+    std::array<std::array<double, 2>, 2> anodicFitCoords = {0, 0, 0, 0};
 
-    int error = getTafelParams(xDataAll, yDataAll, potentialThreshold, cathodicRSquared, cathodicConstant, anodicConstant, iCorr, eCorr, cathodicFitCoords, anodicFitCoords)
+    int error = getTafelParams(xDataAll, yDataAll, potentialThreshold, cathodicRSquared, cathodicConstant, anodicConstant, iCorr, eCorr, cathodicFitCoords, anodicFitCoords);
     
+    std::cout << "error: " << error << std::endl;
+    std::cout << "cathodic constant: " << cathodicConstant << std::endl;
+    std::cout << "anodic constant: " << anodicConstant << std::endl;
+    std::cout << "iCorr: " << iCorr << std::endl;
+    std::cout << "eCorr: " << eCorr << std::endl;
+    std::cout << "anodicFitCoords: " << anodicFitCoords[0][0] << ", " << anodicFitCoords[1][0] << ", " << anodicFitCoords[0][1] << ", " << anodicFitCoords[1][1] << std::endl;
+    std::cout << "cathodicFitCoords: " << cathodicFitCoords[0][0] << ", " << cathodicFitCoords[1][0] << ", " << cathodicFitCoords[0][1] << ", " << cathodicFitCoords[1][1] << std::endl;
+    std::cin.get();
+}
+
+int getTafelParamsWrapper(double* xData, 
+    double* yData, 
+    int numRows,
+    const double potentialThreshold, 
+    const double cathodicRSquared, 
+    double cathodicConstant, 
+    double anodicConstant, 
+    double iCorr, 
+    double eCorr, 
+    double cathodicFitCoords[4], 
+    double anodicFitCoords[4] )
+{
+    std::vector<double> xDataVector;
+    std::vector<double> yDataVector;
+    for (int i = 0; i < numRows; i++)
+    {
+        xDataVector.push_back(xData[i]);
+        yDataVector.push_back(yData[i]);
+    }
+
+    std::array<std::array<double, 2>, 2> cathodicFitCoordsArr = {0, 0, 0, 0};
+    std::array<std::array<double, 2>, 2> anodicFitCoordsArr = {0, 0, 0, 0};
+    int error = getTafelParams(xDataVector, yDataVector, potentialThreshold, cathodicRSquared, cathodicConstant, anodicConstant, iCorr, eCorr, cathodicFitCoordsArr, anodicFitCoordsArr);
+
+    int it = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            cathodicFitCoords[it] = cathodicFitCoordsArr[i][j];
+            anodicFitCoords[it] = anodicFitCoordsArr[i][j];
+            it = it + 1;
+        }
+    }
+
+    return error;
 }
 
 int getTafelParams(std::vector<double>& xDataAll, 
-std::vector<double>& yDataAll, 
-const double potentialThreshold, 
-const double cathodicRSquared, 
-double& cathodicConstant, 
-double& anodicConstant, 
-double& iCorr, 
-double& eCorr, 
-double cathodicFitCoords[4], 
-double anodicFitCoords[4] )
+    std::vector<double>& yDataAll, 
+    const double potentialThreshold, 
+    const double cathodicRSquared, 
+    double& cathodicConstant, 
+    double& anodicConstant, 
+    double& iCorr, 
+    double& eCorr, 
+    std::array<std::array<double, 2>, 2>& cathodicFitCoords, 
+    std::array<std::array<double, 2>, 2>& anodicFitCoords )
 {
     std::vector<double> xData;
     std::vector<double> yData;
@@ -63,6 +133,12 @@ double anodicFitCoords[4] )
             xData.push_back(xDataAll[i]);
             yData.push_back(yDataAll[i]);
         }
+    }
+
+    std::cout << "raw data: " << std::endl;
+    for(int i = 0; i < xData.size(); i++ )
+    {
+        std::cout << xData[i] << ", " << yData[i] << std::endl;
     }
     
     std::vector<double> xDeriv = fastSmooth(xData, 3);
@@ -86,7 +162,7 @@ double anodicFitCoords[4] )
     {
         if (xData[zeroCrossInd] == minX )
         {
-            double eCorr = yData[zeroCrossInd];
+            eCorr = yData[zeroCrossInd];
             break;
         }
     }
@@ -95,13 +171,14 @@ double anodicFitCoords[4] )
     std::vector<double> yCathodic;
     std::vector<double> xAnodic;
     std::vector<double> yAnodic;
-    std::copy(xData.begin() + zeroCrossInd + 1, xData.end(), back_inserter(xAnodic));
-    std::copy(yData.begin() + zeroCrossInd + 1, yData.end(), back_inserter(yAnodic));
+    std::copy(xData.begin() + zeroCrossInd, xData.end(), back_inserter(xAnodic));
+    std::copy(yData.begin() + zeroCrossInd, yData.end(), back_inserter(yAnodic));
 
     xCathodic.push_back(xData[0]);
     yCathodic.push_back(yData[0]);
-    PolynomialRegression<double> polyReg;
     std::vector<double> logXCathodic;
+    logXCathodic.push_back(log(xData[0]));
+    PolynomialRegression<double> polyReg;
     std::vector<double> cathodicCoeffs;
     std::vector<double> rSquaredArray;
     std::vector<double> ss_res_array;
@@ -110,14 +187,13 @@ double anodicFitCoords[4] )
     double yMean, ss_res, ss_tot;
     for (int i = 1; i < zeroCrossInd; i++)
     {
-        logXCathodic.clear();
         cathodicCoeffs.clear();
         yCathodicFit.clear();
         
         xCathodic.push_back(xData[i]);
+        logXCathodic.push_back(log(xData[i]));
         yCathodic.push_back(yData[i]);
 
-        logXCathodic = forEachScalar(xCathodic, 0, [](double a, double b) ->double {return log(a); });
         polyReg.fitIt(logXCathodic, yCathodic, 1, cathodicCoeffs );
 
         yCathodicFit = polynomial(logXCathodic, cathodicCoeffs);
@@ -145,57 +221,84 @@ double anodicFitCoords[4] )
         }
     }
 
-    std::vector<double> xCathodicOpt;
+    std::vector<double> xCathodicLinspace = linspace(xData[0], xData[cFitInd - 1], cFitInd);
+    std::vector<double> logXCathodicLinspace = forEachScalar(xCathodicLinspace, 0, [](double a, double b) ->double {return log(a); });
     std::vector<double> yCathodicOpt;
-    std::copy(xCathodic.begin(), xCathodic.begin() + cFitInd, back_inserter(xCathodicOpt));
-    std::copy(xCathodic.begin(), yCathodic.begin() + cFitInd, back_inserter(yCathodicOpt));
-    logXCathodic = forEachScalar(xCathodic, 0, [](double a, double b) ->double {return log(a); });
-    polyReg.fitIt(logXCathodic, yCathodic, 1, cathodicCoeffs);
-    yCathodicFit = polynomial(logXCathodic, cathodicCoeffs);
+    yCathodicFit.clear();
+    cathodicCoeffs.clear();
+    std::copy(yData.begin(), yData.begin() + cFitInd, back_inserter(yCathodicOpt));
+    polyReg.fitIt(logXCathodicLinspace, yCathodicOpt, 1, cathodicCoeffs);
+    yCathodicFit = polynomial(logXCathodicLinspace, cathodicCoeffs);
 
-    double xIntersection = exp((eCorr - cathodicCoeffs[2]) / cathodicCoeffs[1]);
+    double xIntersection = exp((eCorr - cathodicCoeffs[0]) / cathodicCoeffs[1]);
 
     std::vector<double> anodicCurveCoeffs;
-    std::vector<double> logXAnodic = forEachScalar(xAnodic, 0, [](double a, double b) ->double {return log(a); });
-    polyReg.fitIt(logXAnodic, yAnodic, 2, anodicCurveCoeffs);
+    std::vector<double> xAnodicLinspace = linspace(xAnodic[0], xAnodic[xAnodic.size() - 1], xAnodic.size());
+    std::vector<double> logXAnodicLinspace = forEachScalar(xAnodicLinspace, 0, [](double a, double b) ->double {return log(a); });
+    polyReg.fitIt(logXAnodicLinspace, yAnodic, 2, anodicCurveCoeffs);
+    std::vector<double> yAnodicCurveFit = polynomial(logXAnodicLinspace, anodicCurveCoeffs);
 
-    double step = 0.001;
+    double step = 0.00001;
     double y2 = eCorr - step;
-    std::vector<double> xCoords = {xIntersection, *std::max_element(xAnodic.begin(), xAnodic.end())};
-    std::vector<double> yCoords = {eCorr, 0};
+    std::vector<double> xAnodicFitCoords = {xIntersection, xAnodic[xAnodic.size() - 1]};
+    std::vector<double> logXAnodicFitCoords = {log(xAnodicFitCoords[0]), log(xAnodicFitCoords[1])};
+    std::vector<double> yAnodicFitCoords = {eCorr, y2};
     double b, a, c;
     int intersects = false;
     std::vector<double> anodicCoeffs;
+    std::vector<double> yAnodicFit;
+    std::pair<std::complex<double>, std::complex<double>> solutions;
+    int realSolutions = false;
     while (!intersects)
     {
         y2 = y2 + step;
-        if (y2 >=1)
-        {
+        if (y2 >= 0)
             return 3;
-        }
-        yCoords[1] = y2;
-        polyReg.fitIt(xCoords, yCoords, 1, anodicCoeffs);
-        a = anodicCurveCoeffs[0];
-        b = anodicCurveCoeffs[1] + anodicCoeffs[0];
-        c = anodicCurveCoeffs[2] + anodicCoeffs[1];
-        if (b * b - 4 * a * c >=0)
-        {
-            intersects = true;
-        }
+
+        yAnodicFitCoords[1] = y2;
+        polyReg.fitIt(logXAnodicFitCoords, yAnodicFitCoords, 1, anodicCoeffs);
+
+        a = anodicCurveCoeffs[2];
+        b = anodicCurveCoeffs[1] - anodicCoeffs[1];
+        c = anodicCurveCoeffs[0] - anodicCoeffs[0];
+        solutions = SolveQuadratic(a, b, c, realSolutions);
+        if (realSolutions)
+            if (inRange(solutions.first.real(), xAnodicFitCoords[0], xAnodicFitCoords[1]) || inRange(solutions.second.real(), xAnodicFitCoords[0], xAnodicFitCoords[1]))
+                intersects = true;
+            
     }
 
-    std::vector<double> yAnodicFit = polynomial(xCoords, anodicCoeffs);
+    anodicConstant = (yAnodicFitCoords[1] - eCorr) / pow(10, xIntersection - xCathodic[0]);
+    cathodicConstant = (eCorr - yCathodicFit[0]) / pow(10, xIntersection - xCathodic[0]);
+    iCorr = xAnodicFitCoords[0];
+    anodicFitCoords = {iCorr, xAnodicFitCoords[1], eCorr, yAnodicFitCoords[1]};
+    cathodicFitCoords = {iCorr, xAnodicFitCoords[1], eCorr, yCathodicFit[0]};
 
-    cathodicConstant = (eCorr - *std::min_element(yCathodicFit.begin(), yCathodicFit.end())) / pow(10, (xIntersection - *std::max_element(xCathodicOpt.begin(), xCathodicOpt.end())));
-    anodicConstant = (yAnodicFit[1] - eCorr) / pow(10, (xIntersection - *std::max_element(xCathodicOpt.begin(), xCathodicOpt.end())));
-    iCorr = xCoords[0];
-    cathodicFitCoords[4] = {iCorr, eCorr, *std::max_element(xCathodicOpt.begin(),  xCathodicOpt.end()), *std::min_element(yCathodicFit.begin(), yCathodicFit.end())};
-    anodicFitCoords[4] = {xCoords[0], xCoords[1], yAnodicFit[0], yAnodicFit[1]};
-
-    std::cin.get();
     return 0;
 }
 
+int inRange(double val, double lowerLim, double upperLim)
+{
+    if (val > lowerLim && val < upperLim)
+        return true;
+    else
+        return false;
+}
+
+std::vector<double> linspace(double startVal, double endVal, int elements)
+{
+    std::vector<double> linspaceVector;
+
+    double delta = (endVal - startVal) / (elements - 1);
+
+    for(int i=0; i < elements - 1; ++i)
+    {
+      linspaceVector.push_back(startVal + delta * i);
+    }
+    linspaceVector.push_back(endVal);
+
+    return linspaceVector;
+}
 
 std::vector<double> polynomial(std::vector<double>& xData, std::vector<double>& coeffs)
 {
