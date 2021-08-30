@@ -231,8 +231,7 @@ int getTafelParams(std::vector<double>& xDataAll,
     std::vector<double> anodicCurveCoeffs;
     std::vector<double> xAnodicLinspace = linspace(xAnodic[0], xAnodic[xAnodic.size() - 1], xAnodic.size());
     std::vector<double> logXAnodicLinspace = forEachScalar(xAnodicLinspace, 0, [](double a, double b) ->double {return log(a); });
-    polyReg.fitIt(logXAnodicLinspace, yAnodic, 3, anodicCurveCoeffs);
-    std::vector<double> yAnodicCurveFit = polynomial(logXAnodicLinspace, anodicCurveCoeffs);
+    polyReg.fitIt(xAnodicLinspace, yAnodic, 3, anodicCurveCoeffs);
 
     double step = 0.00005;
     double y2 = *eCorr - step;
@@ -243,9 +242,7 @@ int getTafelParams(std::vector<double>& xDataAll,
     int intersects = false;
     std::vector<double> anodicCoeffs;
     std::vector<double> yAnodicFit;
-    // std::pair<std::complex<double>, std::complex<double>> solutions;
     std::array<std::complex<double>, 3> solutions;
-    // int realSolutions = false;
     while (!intersects)
     {
         y2 = y2 + step;
@@ -253,18 +250,15 @@ int getTafelParams(std::vector<double>& xDataAll,
             return 3;
 
         yAnodicFitCoords[1] = y2;
-        polyReg.fitIt(logXAnodicFitCoords, yAnodicFitCoords, 1, anodicCoeffs);
+        polyReg.fitIt(xAnodicFitCoords, yAnodicFitCoords, 1, anodicCoeffs);
 
         a = anodicCurveCoeffs[3];
         b = anodicCurveCoeffs[2];
         c = anodicCurveCoeffs[1] - anodicCoeffs[1];
         d = anodicCurveCoeffs[0] - anodicCoeffs[0];
-        // solutions = SolveQuadratic(a, b, c, realSolutions);
         solutions = SolveCubic(a, b, c, d);
-        // printf("%f; 1: %f; 2: %f; 3: %f\n", y2, solutions[0].real(), solutions[1].real(), solutions[2].real());
-        // if (inRange(solutions[0].real(), logXAnodicFitCoords[0], logXAnodicFitCoords[1]) || inRange(solutions[1].real(), logXAnodicFitCoords[0], logXAnodicFitCoords[1]) || inRange(solutions[2].real(), logXAnodicFitCoords[0], logXAnodicFitCoords[1]))
-            // intersects = true;
-        if (solutions[0].real() > logXAnodicFitCoords[1] || solutions[1].real() > logXAnodicFitCoords[1] || solutions[2].real() > logXAnodicFitCoords[1])
+        // printf("%f; 1: %f; 2: %f; 3: %f\n", y2, solutions[0].real(), solutions[1].real(), solutions[1].imag());
+        if (inRange(solutions[0].real(), xAnodicFitCoords[0], xAnodicFitCoords[1]) || inRange(solutions[1].real(), xAnodicFitCoords[0], xAnodicFitCoords[1]) || inRange(solutions[2].real(), xAnodicFitCoords[0], xAnodicFitCoords[1]))
             intersects = true;
     }
     // printf("a: %f; b: %f; c: %f; d: %f\n", a, b, c, d);
