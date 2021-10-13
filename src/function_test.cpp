@@ -23,12 +23,17 @@ std::array<double, SIZE> forEach(const std::array<double, SIZE>& values, double 
 
 int main()
 {
-    const std::array<double, 4>yData = {1.0, 2.0, -1.5, 2.0};
+    const std::array<double, 4>yData = {1.0, 2.0, 3.0, 4.0};
+
+    std::vector<double> yReverse;
+    std::copy(yData.rbegin() + yData.size() - 2, yData.rbegin() + yData.size() - 1, back_inserter(yReverse));
+    // yReverse (yData.rbegin(), yData.rend());
+    for(int i = 0; i < 2; ++i)
+        std::cout << yReverse[i] << std::endl;
 
     // solve quadratic equations
-    std::pair<std::complex<float>, std::complex<float>> roots = SolveQuadratic(1, 0, 4);
-    std::cout << "root 1: " << roots.first << "; root 2: " << roots.second << std::endl;
-
+    // std::pair<std::complex<float>, std::complex<float>> roots = SolveQuadratic(1, 0, 4);
+    // std::cout << "root 1: " << roots.first << "; root 2: " << roots.second << std::endl;
 
     // find first value which meets criteria
     std::vector<double> values = {1.3, 2.4, 4.1, 2.5, 2.5};
