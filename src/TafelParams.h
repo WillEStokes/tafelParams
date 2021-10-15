@@ -1,8 +1,6 @@
 #ifndef TAFELPARAMS_H
 #define TAFELPARAMS_H
 
-#define ELEMENTS 1000
-
 /* Include Files */
 
 /* Function Declarations */
@@ -12,13 +10,14 @@ extern "C" int getTafelParamsWrapper(double* xData,
     const double currentThreshold, 
     const double potentialThreshold, 
     const double cathodicCorrCoeff, 
+    const int fitType, 
     double* cathodicConstant, 
     double* anodicConstant, 
     double* iCorr, 
     double* eCorr, 
     double cathodicFitCoords[4], 
     double anodicFitCoords[4],
-    double anodicTraceCoeffs[2],
+    double anodicTraceCoeffs[4],
     double anodicFitCoeffs[2] );;
 extern "C" double anodicFitTest(double* xDataDbL, 
     double* yDataDbL, 

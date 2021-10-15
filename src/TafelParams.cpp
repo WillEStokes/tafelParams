@@ -32,13 +32,14 @@ int getTafelParams(std::vector<double>& xDataAll,
     const double currentThreshold, 
     const double potentialThreshold, 
     const double cathodicCorrCoeff, 
+    const int fitType, 
     double*& cathodicConstant, 
     double*& anodicConstant, 
     double*& iCorr, 
     double*& eCorr, 
     std::array<std::array<double, 2>, 2>& cathodicFitCoords, 
     std::array<std::array<double, 2>, 2>& anodicFitCoords,
-    std::array<double, 2>& anodicTraceCoeffs,
+    std::array<double, 4>& anodicTraceCoeffs,
     std::array<double, 2>& anodicFitCoeffs );
 int getTafelParamsWrapper(double* xData, 
     double* yData, 
@@ -46,13 +47,14 @@ int getTafelParamsWrapper(double* xData,
     const double currentThreshold, 
     const double potentialThreshold, 
     const double cathodicCorrCoeff, 
+    const int fitType, 
     double* cathodicConstant, 
     double* anodicConstant, 
     double* iCorr, 
     double* eCorr, 
     double cathodicFitCoords[4], 
     double anodicFitCoords[4],
-    double anodicTraceCoeffs[2],
+    double anodicTraceCoeffs[4],
     double anodicFitCoeffs[2] );
 double anodicFitTest(double* xDataDbL, 
     double* yDataDbL, 
@@ -82,9 +84,9 @@ double cathodicFitTest(double* xDataDbL,
 int leastSquares(std::vector<double> xData,
     std::vector<double> yData,
     int elements,
-    int linearFit,
+    bool linearFit,
+    bool computeFit,
     std::pair<double, double>& constants,
-    std::vector<double>& xFit,
     std::vector<double>& yFit);
 double correlationCoefficient(std::vector<double> xData,
     std::vector<double> yData,
@@ -94,26 +96,27 @@ int main()
 {
     std::vector<double> xDataAll;
     std::vector<double> yDataAll;
-    readFile("C:/Users/menwst/Documents/CPP/tafelParams/data/xData", xDataAll);
-    readFile("C:/Users/menwst/Documents/CPP/tafelParams/data/yData", yDataAll);
+    readFile("C:/Users/menwst/Documents/CPP/tafelParams/data/xData2", xDataAll);
+    readFile("C:/Users/menwst/Documents/CPP/tafelParams/data/yData2", yDataAll);
 
     double dummy0 = 0;
     double dummy1 = 0;
     double dummy2 = 0;
     double dummy3 = 0;
-    const double currentThreshold = -0.4;
-    const double potentialThreshold = 1.1;
-    const double cathodicCorrCoeff = 0.35;
+    const double currentThreshold = -0.22;
+    const double potentialThreshold = 1;
+    const double cathodicCorrCoeff = 0.99;
+    const int fitType = 1;
     double* cathodicConstant = &dummy0;
     double* anodicConstant = &dummy1;
-    double* eCorr = &dummy2;
-    double* iCorr = &dummy3;
+    double* iCorr = &dummy2;
+    double* eCorr = &dummy3;
     std::array<std::array<double, 2>, 2> cathodicFitCoords = {0, 0, 0, 0};
     std::array<std::array<double, 2>, 2> anodicFitCoords = {0, 0, 0, 0};
-    std::array<double, 2> anodicTraceCoeffs = {0, 0};
+    std::array<double, 4> anodicTraceCoeffs = {0, 0, 0, 0};
     std::array<double, 2> anodicFitCoeffs = {0, 0};
 
-    int error = getTafelParams(xDataAll, yDataAll, currentThreshold, potentialThreshold, cathodicCorrCoeff, cathodicConstant, anodicConstant, iCorr, eCorr, cathodicFitCoords, anodicFitCoords, anodicTraceCoeffs, anodicFitCoeffs);
+    int error = getTafelParams(xDataAll, yDataAll, currentThreshold, potentialThreshold, cathodicCorrCoeff, fitType, cathodicConstant, anodicConstant, iCorr, eCorr, cathodicFitCoords, anodicFitCoords, anodicTraceCoeffs, anodicFitCoeffs);
 
     std::cout << "error: " << error << std::endl;
     std::cout << "cathodic constant: " << *cathodicConstant << std::endl;
@@ -131,13 +134,14 @@ int getTafelParamsWrapper(double* xData,
     const double currentThreshold, 
     const double potentialThreshold, 
     const double cathodicCorrCoeff, 
+    const int fitType, 
     double* cathodicConstant, 
     double* anodicConstant, 
     double* iCorr, 
     double* eCorr, 
     double cathodicFitCoords[4], 
     double anodicFitCoords[4],
-    double anodicTraceCoeffs[2],
+    double anodicTraceCoeffs[4],
     double anodicFitCoeffs[2] )
 {
     std::vector<double> xDataVector(xData, xData + numRows);
@@ -145,18 +149,18 @@ int getTafelParamsWrapper(double* xData,
 
     std::array<std::array<double, 2>, 2> cathodicFitCoordsArr = {0, 0, 0, 0};
     std::array<std::array<double, 2>, 2> anodicFitCoordsArr = {0, 0, 0, 0};
-    std::array<double, 2> anodicTraceCoeffsArr = {0, 0};
+    std::array<double, 4> anodicTraceCoeffsArr = {0, 0, 0, 0};
     std::array<double, 2> anodicFitCoeffsArr = {0, 0};
     
-    int error = getTafelParams(xDataVector, yDataVector, currentThreshold, potentialThreshold, cathodicCorrCoeff, cathodicConstant, anodicConstant, iCorr, eCorr, cathodicFitCoordsArr, anodicFitCoordsArr, anodicTraceCoeffsArr, anodicFitCoeffsArr);
+    int error = getTafelParams(xDataVector, yDataVector, currentThreshold, potentialThreshold, cathodicCorrCoeff, fitType, cathodicConstant, anodicConstant, iCorr, eCorr, cathodicFitCoordsArr, anodicFitCoordsArr, anodicTraceCoeffsArr, anodicFitCoeffsArr);
 
     int it = 0;
     for (int i = 0; i < 2; i++)
     {
-        anodicTraceCoeffs[i] = anodicTraceCoeffsArr[i];
         anodicFitCoeffs[i] = anodicFitCoeffsArr[i];
         for (int j = 0; j < 2; j++)
         {
+            anodicTraceCoeffs[it] = anodicTraceCoeffsArr[it];
             cathodicFitCoords[it] = cathodicFitCoordsArr[i][j];
             anodicFitCoords[it] = anodicFitCoordsArr[i][j];
             it = it + 1;
@@ -171,13 +175,14 @@ int getTafelParams(std::vector<double>& xDataAll,
     const double currentThreshold, 
     const double potentialThreshold, 
     const double cathodicCorrCoeff, 
+    const int fitType, 
     double*& cathodicConstant, 
     double*& anodicConstant, 
     double*& iCorr, 
     double*& eCorr, 
     std::array<std::array<double, 2>, 2>& cathodicFitCoords, 
     std::array<std::array<double, 2>, 2>& anodicFitCoords,
-    std::array<double, 2>& anodicTraceCoeffs,
+    std::array<double, 4>& anodicTraceCoeffs,
     std::array<double, 2>& anodicFitCoeffs )
 {
     std::vector<double> xData;
@@ -191,7 +196,7 @@ int getTafelParams(std::vector<double>& xDataAll,
         }
     }
 
-    if (xData.size() < 4) {return 1;}
+    if (xData.size() < 10) {return 1;}
     
     std::vector<double> xDeriv = fastSmooth(xData, 3);
     xDeriv = deriv(xDeriv);
@@ -200,70 +205,70 @@ int getTafelParams(std::vector<double>& xDataAll,
     xData.erase(xData.begin(), xData.begin() + 2);
     yData.erase(yData.begin(), yData.begin() + 2);
 
+    // if (xDeriv[0] > 0 )
+        // return 3;
+
     for (int i = 0; i < xDeriv.size(); i++)
     {
         if (xDeriv[i] > 0 )
             break;
         if (i + 1 == xDeriv.size())
-            return 2;
+            return 3;
     }
 
     double minX = *std::min_element(xData.begin(), xData.end());
+
+    if (xData[0] == minX || xData[1] == minX)
+        return 2;
+
     int zeroCrossInd;
-    
-    for (zeroCrossInd = 0; zeroCrossInd < xData.size(); zeroCrossInd++)
+    for (zeroCrossInd = 2; zeroCrossInd < xData.size(); zeroCrossInd++)
     {
-        if (xData[zeroCrossInd] == minX )
-        {
+        if (xData[zeroCrossInd] == minX ) {
             *eCorr = yData[zeroCrossInd];
-            break;
-        }
+            break; }
     }
 
     std::vector<double> xCathodic, yCathodic;
     xCathodic.push_back(xData[0]);
     yCathodic.push_back(yData[0]);
-    PolynomialRegression<double> polyReg;
-    std::vector<double> corrCoeffVect, xCathodicFitVect, yCathodicFitVect;
+    std::vector<double> corrCoeffVect, yCathodicFitVect;
     std::pair<double, double> constants;
     std::vector<std::pair<double, double>> constantsVect;
     double corrCoeff;
-    int j = 2;
+    int elements = 2;
     for (int i = 1; i < zeroCrossInd; i++ )
     {
         xCathodic.push_back(xData[i]);
         yCathodic.push_back(yData[i]);
-        xCathodicFitVect.clear();
         yCathodicFitVect.clear();
 
-        leastSquares(xCathodic, yCathodic, j, true, constants, xCathodicFitVect, yCathodicFitVect);
+        leastSquares(xCathodic, yCathodic, elements, true, true, constants, yCathodicFitVect);
 
-        corrCoeff = correlationCoefficient(xCathodicFitVect, yCathodicFitVect, j);
+        corrCoeff = correlationCoefficient(yCathodic, yCathodicFitVect, elements);
 
         corrCoeffVect.push_back(corrCoeff);
         constantsVect.push_back(constants);
-        j = j + 1;
+        elements = elements + 1;
     }
 
     int cFitInd;
     for (cFitInd = corrCoeffVect.size() - 1; cFitInd >= 2; cFitInd-- )
     {
         if (cFitInd == 2)
-            return 1;
+            return 3;
         if (abs(corrCoeffVect[cFitInd]) >= cathodicCorrCoeff)
             break;
     }
 
-    xCathodicFitVect.clear();
-    yCathodicFitVect.clear();
     *iCorr = exp((*eCorr - constantsVect[cFitInd].first) / constantsVect[cFitInd].second);
-    std::vector<double> xFit = linspace(*iCorr, *std::max_element(xCathodic.begin(), xCathodic.end()), 2);
+    std::vector<double> xFit = {*iCorr, *std::max_element(xCathodic.begin(), xCathodic.end())};
     std::vector<double> yFit;
     for (int i = 0; i < 2; i++)
         yFit.push_back((constantsVect[cFitInd].first + constantsVect[cFitInd].second * log(xFit[i])));
 
     cathodicFitCoords = {xFit[0], xFit[1], yFit[0], yFit[1]};
-    *cathodicConstant = (yFit[1] - yFit[0]) / (xFit[1] - xFit[0]);
+    *cathodicConstant = abs(((constantsVect[cFitInd].first + constantsVect[cFitInd].second * log(1)) - (constantsVect[cFitInd].first + constantsVect[cFitInd].second * log(0.1))));
 
     int anodicElements = xData.size() - zeroCrossInd;
 
@@ -272,45 +277,72 @@ int getTafelParams(std::vector<double>& xDataAll,
     std::copy(xData.begin() + zeroCrossInd, xData.end(), back_inserter(xAnodic));
     std::copy(yData.begin() + zeroCrossInd, yData.end(), back_inserter(yAnodic));
 
-    std::vector<double> xAnodicTraceVect, yAnodicTraceVect, xAnodicFitVect, yAnodicFitVect;
-    std::pair<double, double> traceConstants, fitConstants;
-    leastSquares(xAnodic, yAnodic, anodicElements, false, traceConstants, xAnodicTraceVect, yAnodicTraceVect);
+    double corrCoeffExp, corrCoeffPoly;
+    
+    std::vector<double> yAnodicTraceVectExp, yAnodicFitVect;
+    std::pair<double, double> expTraceCoeffs, fitConstants;
+    leastSquares(xAnodic, yAnodic, anodicElements, false, true, expTraceCoeffs, yAnodicTraceVectExp);
+    corrCoeffExp = correlationCoefficient(yAnodic, yAnodicTraceVectExp, elements);
 
-    anodicTraceCoeffs[0] = traceConstants.first;
-    anodicTraceCoeffs[1] = traceConstants.second;
+    PolynomialRegression<double> polyReg;
+    std::vector<double> polyTraceCoeffs, yAnodicTraceVectPoly;
+    polyReg.fitIt(xAnodic, yAnodic, 3, polyTraceCoeffs);
+    yAnodicTraceVectPoly = polynomial(xAnodic, polyTraceCoeffs);
+    corrCoeffPoly = correlationCoefficient(yAnodic, yAnodicTraceVectPoly, elements);
+
+    // bool fitPolynomial = false;
+    // if (abs(corrCoeffPoly) >= abs(corrCoeffExp))
+        // fitPolynomial = true;
+
+    // *fitType = fitPolynomial;
+
+    if (fitType) {
+        anodicTraceCoeffs[0] = polyTraceCoeffs[0];
+        anodicTraceCoeffs[1] = polyTraceCoeffs[1];
+        anodicTraceCoeffs[2] = polyTraceCoeffs[2];
+        anodicTraceCoeffs[3] = polyTraceCoeffs[3]; }
+    else {
+        anodicTraceCoeffs[0] = expTraceCoeffs.first;
+        anodicTraceCoeffs[1] = expTraceCoeffs.second; }
 
     double xUpper = *std::max_element(xAnodic.begin(), xAnodic.end());
-    std::vector<double> xAnodicGuess = logspace(*iCorr, xUpper, 50);
+    int guessElements = 20;
+    std::vector<double> xAnodicGuess = logspace(*iCorr, xUpper, guessElements);
 
-    double step = 0.00005;
-    double y2 = *eCorr - step;  
+    std::vector<double> yAnodicGuess;
+    std::vector<double> polySolution;
+    double step = 0.0005;
+    double y2 = *eCorr - step;
     double maxX = *std::max_element(xAnodic.begin(), xAnodic.end());
-    std::vector<double> yAnodicGuess = linspace(*eCorr, y2, 50);
     int intersects = false;
     while (!intersects)
     {
         y2 = y2 + step;
-        if (y2 >= 0) {
-            anodicFitCoeffs[0] = fitConstants.first;
-            anodicFitCoeffs[1] = fitConstants.second;
-            return 4; }
+        if (y2 >= 0)
+            return 4;
 
         yAnodicGuess.clear();
-        xAnodicFitVect.clear();
         yAnodicFitVect.clear();
-        yAnodicGuess = linspace(*eCorr, y2, 50);
-        leastSquares(xAnodicGuess, yAnodicGuess, 50, true, fitConstants, xAnodicFitVect, yAnodicFitVect);
+        yAnodicGuess = linspace(*eCorr, y2, guessElements);
 
-        for (int i = 0; i < 50; i++){
-            if (traceConstants.first * pow(traceConstants.second, xAnodicFitVect[i]) < yAnodicFitVect[i])
-                intersects = true;
+        if (fitType) {
+            polySolution.clear();
+            polySolution = polynomial(xAnodicGuess, polyTraceCoeffs); }
+
+        for (int i = 0; i < guessElements; i++){
+            if (fitType) {
+                if (polySolution[i] < yAnodicGuess[i])
+                    intersects = true; }
+            else {
+                if (expTraceCoeffs.first * pow(expTraceCoeffs.second, xAnodicGuess[i]) < yAnodicGuess[i])
+                    intersects = true; }
         }
     }
 
+    leastSquares(xAnodicGuess, yAnodicGuess, guessElements, true, false, fitConstants, yAnodicFitVect);
+    *anodicConstant = abs(((fitConstants.first + fitConstants.second * log(1)) - (fitConstants.first + fitConstants.second * log(0.1))));
     anodicFitCoeffs[0] = fitConstants.first;
     anodicFitCoeffs[1] = fitConstants.second;
-
-    *anodicConstant = (maxX - *eCorr) / (*iCorr - y2);
     anodicFitCoords = {*iCorr, maxX, *eCorr, y2};
 
     return 0;
@@ -361,7 +393,7 @@ double cathodicFitTest(double* xDataDbL,
     xCathodic.push_back(xData[0]);
     yCathodic.push_back(yData[0]);
     PolynomialRegression<double> polyReg;
-    std::vector<double> corrCoeffVect, xCathodicFitVect, yCathodicFitVect;
+    std::vector<double> corrCoeffVect, yCathodicFitVect;
     std::pair<double, double> constants;
     std::vector<std::pair<double, double>> constantsVect;
     double corrCoeff;
@@ -370,12 +402,11 @@ double cathodicFitTest(double* xDataDbL,
     {
         xCathodic.push_back(xData[i]);
         yCathodic.push_back(yData[i]);
-        xCathodicFitVect.clear();
         yCathodicFitVect.clear();
 
-        leastSquares(xCathodic, yCathodic, j, true, constants, xCathodicFitVect, yCathodicFitVect);
+        leastSquares(xCathodic, yCathodic, j, true, true, constants, yCathodicFitVect);
 
-        corrCoeff = correlationCoefficient(xCathodicFitVect, yCathodicFitVect, j);
+        corrCoeff = correlationCoefficient(yCathodic, yCathodicFitVect, j);
 
         corrCoeffVect.push_back(corrCoeff);
         constantsVect.push_back(constants);
@@ -396,7 +427,6 @@ double cathodicFitTest(double* xDataDbL,
             break;
     }
 
-    xCathodicFitVect.clear();
     yCathodicFitVect.clear();
     double xLower = exp((*eCorr - constantsVect[cFitInd].first) / constantsVect[cFitInd].second);
     std::vector<double> xFit = linspace(xLower, *std::max_element(xCathodic.begin(), xCathodic.end()), 2);
@@ -472,31 +502,29 @@ double anodicFitTest(double* xDataDbL,
     std::copy(xData.begin() + zeroCrossInd, xData.end(), back_inserter(xAnodic));
     std::copy(yData.begin() + zeroCrossInd, yData.end(), back_inserter(yAnodic));
 
-    std::vector<double> xAnodicTraceVect, yAnodicTraceVect, xAnodicFitVect, yAnodicFitVect;
+    std::vector<double> yAnodicTraceVect, yAnodicFitVect;
     std::pair<double, double> traceConstants, fitConstants;
-    leastSquares(xAnodic, yAnodic, *anodicElements, false, traceConstants, xAnodicTraceVect, yAnodicTraceVect);
+    leastSquares(xAnodic, yAnodic, *anodicElements, false, true, traceConstants, yAnodicTraceVect);
 
     double xUpper = *std::max_element(xAnodic.begin(), xAnodic.end());
     std::vector<double> xAnodicGuess = logspace(iCorr, xUpper, 50);
     std::vector<double> yAnodicGuess = linspace(*eCorr, y2, 50);
-    leastSquares(xAnodicGuess, yAnodicGuess, 50, true, fitConstants, xAnodicFitVect, yAnodicFitVect);
+    leastSquares(xAnodicGuess, yAnodicGuess, 50, true, true, fitConstants, yAnodicFitVect);
 
     for (int i = 0; i < 50; i++)
     {
-        if (traceConstants.first * pow(traceConstants.second, xAnodicFitVect[i]) < yAnodicFitVect[i]) {
+        if (traceConstants.first * pow(traceConstants.second, xAnodicGuess[i]) < yAnodicFitVect[i]) {
             *intersects = true;
             break; }
     }
 
     for (int i = 0; i < *anodicElements; i++)
     {
-        xAnodicTrace[i] = xAnodicTraceVect[i];
         yAnodicTrace[i] = yAnodicTraceVect[i];
     }
 
     for (int i = 0; i < 50; i++)
     {
-        xAnodicFit[i] = xAnodicFitVect[i];
         yAnodicFit[i] = yAnodicFitVect[i];
     }
 
@@ -512,14 +540,14 @@ double anodicFitTest(double* xDataDbL,
 int leastSquares(std::vector<double> xData,
     std::vector<double> yData,
     int elements,
-    int linearFit,
+    bool linearFit,
+    bool computeFit,
     std::pair<double, double>& constants,
-    std::vector<double>& xFit,
     std::vector<double>& yFit)
 {
     double sumX = 0, sumX2 = 0, sumY = 0, sumXY = 0, sumLogX = 0, sumLogX2 = 0, sumLogXY = 0, sumLogY = 0, sumXLogY = 0, a, b, A, B;
 
-    std::cout << "------LEASTSQUARES OUTPUT-------" << std::endl;
+    // std::cout << "------LEASTSQUARES OUTPUT-------" << std::endl;
 
     for (int i = 0; i < elements; i++)
     {
@@ -532,12 +560,12 @@ int leastSquares(std::vector<double> xData,
         sumLogXY = sumLogXY + log(xData[i]) * yData[i];
         sumLogY = sumLogY + log(abs(yData[i]));
         sumXLogY = sumXLogY + xData[i] * log(abs(yData[i]));
-        std::cout << "xCathodic: " << xData[i] << "; yCathodic: " << yData[i] << std::endl;
+        // std::cout << "xCathodic: " << xData[i] << "; yCathodic: " << yData[i] << std::endl;
     }
 
-    std::cout << std::endl;
-    std::cout << "sumX: " << sumX << "; sumX2: " << sumX2 << "; sumY: " << sumY << "; sumXY: " << sumXY << std::endl;
-    std::cout << std::endl;
+    // std::cout << std::endl;
+    // std::cout << "sumX: " << sumX << "; sumX2: " << sumX2 << "; sumY: " << sumY << "; sumXY: " << sumXY << std::endl;
+    // std::cout << std::endl;
 
     if (linearFit)
     {
@@ -556,20 +584,21 @@ int leastSquares(std::vector<double> xData,
         constants.second = b;
     }
 
-    std::cout << "A: " << A << "; B: " << B << "; a: " << a << "; b: " << b << std::endl;
-    std::cout << std::endl;
+    // std::cout << "A: " << A << "; B: " << B << "; a: " << a << "; b: " << b << std::endl;
+    // std::cout << std::endl;
 
-    xFit = logspace(*std::min_element(xData.begin(), xData.begin() + elements - 1), *std::max_element(xData.begin(), xData.begin() + elements - 1), elements);
-    for (int i = 0; i < elements; i++)
-    {
-        if (linearFit) {
-            yFit.push_back((A + B * log(xFit[i]))); }
-        else {
-            yFit.push_back(a * pow(b, xFit[i])); }
-        std::cout << "xFit: " << xFit[i] << "; yFit: " << yFit[i] << std::endl;
+    if (computeFit){
+        // xFit = logspace(*std::min_element(xData.begin(), xData.begin() + elements - 1), *std::max_element(xData.begin(), xData.begin() + elements - 1), elements);
+        for (int i = 0; i < elements; i++)
+        {
+            if (linearFit) {
+                yFit.push_back((A + B * log(xData[i]))); }
+            else {
+                yFit.push_back(a * pow(b, xData[i])); }
+        }
     }
 
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
     return 0;
 }
@@ -581,7 +610,7 @@ double correlationCoefficient(std::vector<double> xData,
     double sum_X = 0, sum_Y = 0, sum_XY = 0;
     double squareSum_X = 0, squareSum_Y = 0;
 
-    std::cout << "------CORRELATIONCOEFFICIENT OUTPUT-------" << std::endl;
+    // std::cout << "------CORRELATIONCOEFFICIENT OUTPUT-------" << std::endl;
   
     for (int i = 0; i < elements; i++)
     {
@@ -590,17 +619,17 @@ double correlationCoefficient(std::vector<double> xData,
         sum_XY = sum_XY + xData[i] * abs(yData[i]);
         squareSum_X = squareSum_X + xData[i] * xData[i];
         squareSum_Y = squareSum_Y + abs(yData[i]) * abs(yData[i]);
-        std::cout << "xFit: " << xData[i] << "; yFit: " << yData[i] << std::endl;
+        // std::cout << "xFit: " << xData[i] << "; yFit: " << yData[i] << std::endl;
     }
 
-    std::cout << std::endl;
-    std::cout << "sum_X: " << sum_X << "; sum_Y: " << sum_Y << "; sum_XY: " << sum_XY << "; squareSum_X: " << squareSum_X << "; squareSum_Y: " << squareSum_Y << std::endl;
-    std::cout << std::endl;
+    // std::cout << std::endl;
+    // std::cout << "sum_X: " << sum_X << "; sum_Y: " << sum_Y << "; sum_XY: " << sum_XY << "; squareSum_X: " << squareSum_X << "; squareSum_Y: " << squareSum_Y << std::endl;
+    // std::cout << std::endl;
 
     double corrCoeff = (double)(elements * sum_XY - sum_X * sum_Y) / sqrt((elements * squareSum_X - sum_X * sum_X) * (elements * squareSum_Y - sum_Y * sum_Y));
 
-    std::cout << "corrCoeff: " << corrCoeff << std::endl;
-    std::cout << std::endl;
+    // std::cout << "corrCoeff: " << corrCoeff << std::endl;
+    // std::cout << std::endl;
   
     return corrCoeff;
 }
